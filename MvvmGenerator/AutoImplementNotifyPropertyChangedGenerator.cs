@@ -85,20 +85,44 @@ namespace {Consts.Namespace}
                 var candidateProperties = properties
                     .Select(property => (property, model: compilation.GetSemanticModel(property.SyntaxTree)))
                     .Select(x => (x.property, propertySymbol: x.model.GetDeclaredSymbol(x.property) ?? throw new InvalidOperationException()))
-                    .Where(x => x.propertySymbol.GetAttributes().Any(y => y.AttributeClass?.Equals(autoNotifyAttributeSymbol, SymbolEqualityComparer.Default) ?? false));
+                    .Where(x => x.propertySymbol.GetAttributes().Any(y => y.AttributeClass?.Equals(autoNotifyAttributeSymbol, SymbolEqualityComparer.Default) ?? false))
+                    .ToArray();
 
-                var result = candidateFields.Select(x => new Property(x.Type.ToString(), x.Name, getPropertyName(x), true)).ToArray();
+                var result = candidateFields.Select(x => new Property(x.Type.ToString(), x.Name, getPropertyName(x), true))
+                    .Where(x => !string.IsNullOrEmpty(x.Name))
+                    .ToList();
+
+                if (candidateProperties.Any())
+                {
+                    var propMap = result.ToDictionary(x => x.Name);
+                    var dependParis = candidateProperties
+                        .SelectMany(x => 
+                            x.property
+                                .DescendantNodes(y => !y.IsKind(SyntaxKind.IdentifierName))
+                                .OfType<IdentifierNameSyntax>()
+                                .Select(y => (propertyName: x.property.Identifier.Text, dependPropertyName: y.Identifier.Text)))
+                        .Where(x => propMap.ContainsKey(x.dependPropertyName));
+                    foreach (var pair in dependParis)
+                    {
+                        propMap[pair.dependPropertyName].RelatedProperties.Add(pair.propertyName);
+                    }
+
+                    result.AddRange(dependParis
+                        .Select(x => x.propertyName)
+                        .Distinct()
+                        .Select(x => new Property("", "", x, false)));
+                }
 
                 return result;
             }
 
             string getPropertyName(IFieldSymbol f)
             {
-                var attrData = f.GetAttributes().Single(x => x.AttributeClass.Equals(autoNotifyAttributeSymbol, SymbolEqualityComparer.Default));
-                var overridenNameOpt = attrData.NamedArguments.SingleOrDefault(x => x.Key == "PropertyName").Value;
+                var attrData = f.GetAttributes().Single(x => x.AttributeClass?.Equals(autoNotifyAttributeSymbol, SymbolEqualityComparer.Default) ?? false);
+                var overridenNameOpt = attrData.ConstructorArguments.FirstOrDefault().Value as string;
                 return (f.Name.TrimStart('_'), overridenNameOpt) switch
                 {
-                    (_, { IsNull: false } y) => y.Value.ToString(),
+                    (_, string y) when !string.IsNullOrEmpty(y) => y,
                     ({ Length: 0 }, _) => "",
                     ({ Length: 1 } y, _) => y.ToUpper(),
                     (string y, _) => $"{y.Substring(0, 1).ToUpper()}{y.Substring(1)}",

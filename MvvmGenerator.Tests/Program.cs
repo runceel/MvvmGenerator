@@ -18,6 +18,7 @@ namespace MvvmGenerator.Tests
         [AutoNotify]
         private string _lastName;
 
-        
+        [AutoNotify]
+        public string FullName => $"{Xxxx} {LastName}";
     }
 }
