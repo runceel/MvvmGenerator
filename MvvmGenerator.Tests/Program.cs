@@ -6,15 +6,18 @@ namespace MvvmGenerator.Tests
     {
         static void Main(string[] args)
         {
+            var vm = new MainPageViewModel();
         }
     }
 
-    class MainPageViewModel
+    public partial class MainPageViewModel
     {
-        [AutoNotify]
+        [AutoNotify("Xxxx")]
         private string _firstName;
 
         [AutoNotify]
         private string _lastName;
+
+        
     }
 }
