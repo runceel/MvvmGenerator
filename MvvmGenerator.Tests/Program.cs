@@ -6,7 +6,7 @@ namespace MvvmGenerator.Tests
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            MvvmGenerator.Greeter.Greet();
         }
     }
 }
