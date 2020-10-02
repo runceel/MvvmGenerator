@@ -6,7 +6,15 @@ namespace MvvmGenerator.Tests
     {
         static void Main(string[] args)
         {
-            MvvmGenerator.Greeter.Greet();
         }
+    }
+
+    class MainPageViewModel
+    {
+        [AutoNotify]
+        private string _firstName;
+
+        [AutoNotify]
+        private string _lastName;
     }
 }

@@ -15,9 +15,13 @@ namespace MvvmGenerator
 using System;
 namespace MvvmGenerator
 {{
-    public static class Greeter
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    public class AutoNotifyAttribute : Attribute
     {{
-        public static void Greet() => Console.WriteLine(""Hello world"");
+        public string PropertyName {{ get; }}
+
+        public AutoNotifyAttribute() {{}}
+        public AutoNotifyAttribute(string propertyName) {{ PropertyName = propertyName; }}
     }}
 }}", Encoding.UTF8));
         }
@@ -25,5 +29,11 @@ namespace MvvmGenerator
         public void Initialize(GeneratorInitializationContext context)
         {
         }
+    }
+
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    public class AutoNotifyAttribute : Attribute
+    {
+
     }
 }
